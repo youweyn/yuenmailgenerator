@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MyEmailGen - Disposable Email Generator</title>
+  <style>
+    :root {
+      --bg-light: #f9f9f9;
+      --text-light: #2d3436;
+      --bg-dark: #1e272e;
+      --text-dark: #f1f2f6;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      text-align: center;
+      padding: 50px 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    h1 {
+      font-size: 2.5em;
+    }
+
+    button {
+      margin: 10px;
+      padding: 12px 28px;
+      font-size: 18px;
+      background-color: #0984e3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #74b9ff;
+    }
+
+    #emailBox, #inbox {
+      margin-top: 25px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #messages {
+      margin-top: 20px;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .message {
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    footer {
+      margin-top: 60px;
+      font-size: 14px;
+      color: #888;
+    }
+
+    .dark-mode footer {
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>MyEmailGen</h1>
+  <p>Generate a random disposable email and view inbox messages instantly.</p>
+
+  <button onclick="generateEmail()">Generate Email</button>
+  <button onclick="copyEmail()">Copy Email</button>
+  <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+
+  <div id="emailBox">No email generated yet.</div>
+  <div id="inbox"></div>
+  <div id="messages"></div>
+
+  <footer>
+    &copy; 2025 MyEmailGen • Powered by 1secmail API
+  </footer>
+
+  <script>
+    let emailData = { username: "", domain: "" };
+
+    function generateEmail() {
+      const domains = ["1secmail.com", "1secmail.org", "1secmail.net"];
+      const username = Math.random().toString(36).substring(2, 10);
+      const domain = domains[Math.floor(Math.random() * domains.length)];
+      const email = username + "@" + domain;
+
+      emailData = { username, domain };
+      document.getElementById("emailBox").innerText = "Your Email: " + email;
+      document.getElementById("inbox").innerText = "Inbox loading...";
+
+      fetchInbox();
+    }
+
+    function fetchInbox() {
+      const { username, domain } = emailData;
+      fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`)
+        .then(res => res.json())
+        .then(data => {
+          const msgContainer = document.getElementById("messages");
+          msgContainer.innerHTML = "";
+          if (data.length === 0) {
+            document.getElementById("inbox").innerText = "Inbox: No messages yet.";
+            return;
+          }
+
+          document.getElementById("inbox").innerText = "Inbox:";
+          data.forEach(msg => {
+            const div = document.createElement("div");
+            div.className = "message";
+            div.innerHTML = `<strong>From:</strong> ${msg.from}<br>
+                             <strong>Subject:</strong> ${msg.subject}<br>
+                             <strong>Date:</strong> ${msg.date}`;
+            msgContainer.appendChild(div);
+          });
+        })
+        .catch(err => {
+          document.getElementById("inbox").innerText = "Failed to load inbox.";
+        });
+    }
+
+    function copyEmail() {
+      const emailText = document.getElementById("emailBox").innerText.replace("Your Email: ", "");
+      navigator.clipboard.writeText(emailText).then(() => {
+        alert("Email copied to clipboard!");
+      });
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+  </script>
+
+</body>
+</html>
